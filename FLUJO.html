@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reparación Tech Dashboard</title>
+    <style>
+        :root {
+            --bg-color: #1a1a2e;
+            --card-color: #16213e;
+            --accent-color: #0f3460;
+            --text-color: #ffffff;
+            --text-muted: #95a5a6;
+            --high-priority: #e74c3c;
+            --med-priority: #f39c12;
+            --low-priority: #27ae60;
+          
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+      
+
+        .logo-text {
+            font-weight: bold;
+            font-size: 1.2rem;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+
+        #sidebar.collapsed .logo-text {
+            display: none;
+        }
+
+        .toggle-btn {
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            font-size: 1.5rem;
+        }
+
+        .nav-links {
+            margin-top: 20px;
+            list-style: none;
+        }
+
+        .nav-item {
+            padding: 15px 25px;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            transition: background 0.2s;
+            white-space: nowrap;
+        }
+
+        .nav-item:hover {
+            background-color: var(--card-color);
+        }
+
+        .nav-item span:last-child {
+            margin-left: 15px;
+        }
+
+    
+        /* --- CONTENIDO PRINCIPAL --- */
+        main {
+            flex-grow: 1;
+            display: flex;
+            padding: 25px;
+            gap: 25px;
+            overflow-y: auto;
+        }
+
+        /* --- CHECKLIST CENTRAL --- */
+        .checklist-container {
+            flex: 1.5;
+            background-color: var(--card-color);
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .section-title {
+            font-size: 1.4rem;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .task-list {
+            list-style: none;
+        }
+
+        .task-item {
+            background-color: var(--bg-color);
+            margin-bottom: 12px;
+            padding: 15px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            border-left: 4px solid transparent;
+            cursor: pointer;
+            transition: transform 0.1s ease;
+        }
+
+        .task-item:hover {
+            transform: scale(1.01);
+        }
+
+        .task-item.high { border-left-color: var(--high-priority); }
+        .task-item.med { border-left-color: var(--med-priority); }
+        .task-item.low { border-left-color: var(--low-priority); }
+
+        .checkbox {
+            width: 22px;
+            height: 22px;
+            border: 2px solid var(--text-muted);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .task-item.completed .checkbox {
+            background-color: var(--low-priority);
+            border-color: var(--low-priority);
+        }
+
+        .task-item.completed .checkbox::after {
+            content: '✓';
+            font-size: 14px;
+            color: white;
+        }
+
+        .task-info {
+            flex-grow: 1;
+        }
+
+        .task-title {
+            font-weight: 500;
+            font-size: 1rem;
+        }
+
+        .task-item.completed .task-title {
+            text-decoration: line-through;
+            color: var(--text-muted);
+        }
+
+        .task-meta {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        /* --- DASHBOARD DERECHA --- */
+        .dashboard-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+
+        .card {
+            background-color: var(--card-color);
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .chart-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        canvas {
+            max-width: 100%;
+        }
+
+        .percent-text {
+            position: absolute;
+            top: 55%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 2rem;
+            font-weight: bold;
+        }
+
+        .stats-bars {
+            margin-top: 15px;
+        }
+
+        .bar-group {
+            margin-bottom: 15px;
+        }
+
+        .bar-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            margin-bottom: 6px;
+        }
+
+        .bar-bg {
+            height: 8px;
+            background-color: var(--bg-color);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .bar-fill {
+            height: 100%;
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+
+        /* Responsive */
+        @media (max-width: 900px) {
+            main { flex-direction: column; overflow-y: auto; }
+            #sidebar { width: var(--sidebar-collapsed); }
+            .logo-text { display: none; }
+            #sidebar.collapsed .nav-item span:last-child { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+    <main>
+        <!-- Centro: Checklist interactivo -->
+        <section class="checklist-container">
+            <h2 class="section-title">📝 Flujo de Reparación</h2>
+            <div id="taskList" class="task-list">
+                <!-- Las tareas se cargan desde el JS -->
+            </div>
+        </section>
+
+        <!-- Derecha: Dashboard -->
+        <section class="dashboard-container">
+            <div class="card chart-box">
+                <h3 style="margin-bottom: 15px;">Progreso General</h3>
+                <div style="position: relative;">
+                    <canvas id="donutChart" width="200" height="200"></canvas>
+                    <div id="percentDisplay" class="percent-text">0%</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3 style="margin-bottom: 20px;">Estado por Prioridad</h3>
+                <div class="stats-bars">
+                    <div class="bar-group">
+                        <div class="bar-label"><span>Crítico (Alta)</span><span id="labelHigh">0%</span></div>
+                        <div class="bar-bg"><div id="barHigh" class="bar-fill" style="background-color: var(--high-priority);"></div></div>
+                    </div>
+                    <div class="bar-group">
+                        <div class="bar-label"><span>Mantenimiento (Media)</span><span id="labelMed">0%</span></div>
+                        <div class="bar-bg"><div id="barMed" class="bar-fill" style="background-color: var(--med-priority);"></div></div>
+                    </div>
+                    <div class="bar-group">
+                        <div class="bar-label"><span>Limpieza/Software (Baja)</span><span id="labelLow">0%</span></div>
+                        <div class="bar-bg"><div id="barLow" class="bar-fill" style="background-color: var(--low-priority);"></div></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // CONFIGURACIÓN DE TAREAS (Modifica aquí para que se vea reflejado)
+        // El atributo 'completed' define si la tarea ya fue realizada.
+        const tasks = [
+            { id: 1, title: "Diagnóstico inicial de componentes", priority: "high", completed: true, date: "2024-05-20" },
+            { id: 2, title: "Respaldo de información del cliente", priority: "high", completed: true, date: "2024-05-20" },
+            { id: 3, title: "Limpieza física de placa base", priority: "low", completed: false, date: "2024-05-21" },
+            { id: 4, title: "Cambio de pasta térmica (Arctic MX-4)", priority: "med", completed: false, date: "2024-05-21" },
+            { id: 5, title: "Verificación de voltajes en fuente", priority: "high", completed: false, date: "2024-05-21" },
+            { id: 6, title: "Formateo e instalación de Windows 11", priority: "med", completed: false, date: "2024-05-22" },
+            { id: 7, title: "Instalación de Drivers y Office", priority: "low", completed: false, date: "2024-05-22" },
+            { id: 8, title: "Pruebas de estrés (Furmark/Aida64)", priority: "med", completed: false, date: "2024-05-23" }
+            
+        ];
+
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('collapsed');
+        }
+
+        function renderTasks() {
+            const list = document.getElementById('taskList');
+            list.innerHTML = '';
+            
+            tasks.forEach(task => {
+                const item = document.createElement('div');
+                item.className = `task-item ${task.priority} ${task.completed ? 'completed' : ''}`;
+                item.onclick = () => toggleTask(task.id);
+                
+                item.innerHTML = `
+                    <div class="checkbox"></div>
+                    <div class="task-info">
+                        <div class="task-title">${task.title}</div>
+                        <div class="task-meta">Prioridad: ${task.priority.toUpperCase()} | Fecha: ${task.date}</div>
+                    </div>
+                `;
+                list.appendChild(item);
+            });
+            updateDashboard();
+        }
+
+        function toggleTask(id) {
+            const task = tasks.find(t => t.id === id);
+            if (task) {
+                task.completed = !task.completed;
+                renderTasks();
+            }
+        }
+
+        function updateDashboard() {
+            const total = tasks.length;
+            const completed = tasks.filter(t => t.completed).length;
+            const percentage = Math.round((completed / total) * 100);
+
+            // Actualizar Texto Porcentaje
+            document.getElementById('percentDisplay').innerText = percentage + '%';
+
+            // Dibujar Donut Chart con Canvas
+            const canvas = document.getElementById('donutChart');
+            const ctx = canvas.getContext('2d');
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const radius = 80;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Fondo del círculo
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+            ctx.strokeStyle = '#0f3460';
+            ctx.lineWidth = 15;
+            ctx.stroke();
+
+            // Progreso
+            const startAngle = -0.5 * Math.PI;
+            const endAngle = (percentage / 100) * 2 * Math.PI + startAngle;
+
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius, startAngle, endAngle);
+            ctx.strokeStyle = percentage === 100 ? '#27ae60' : '#3498db';
+            ctx.lineWidth = 15;
+            ctx.lineCap = 'round';
+            ctx.stroke();
+
+            // Actualizar Barras de Prioridad
+            updateBar('high', 'barHigh', 'labelHigh');
+            updateBar('med', 'barMed', 'labelMed');
+            updateBar('low', 'barLow', 'labelLow');
+        }
+
+        function updateBar(priority, barId, labelId) {
+            const group = tasks.filter(t => t.priority === priority);
+            if (group.length === 0) return;
+            const done = group.filter(t => t.completed).length;
+            const perc = Math.round((done / group.length) * 100);
+            
+            document.getElementById(barId).style.width = perc + '%';
+            document.getElementById(labelId).innerText = perc + '%';
+        }
+
+        // Iniciar App
+        window.onload = () => {
+            renderTasks();
+        };
+    </script>
+</body>
+</html>
